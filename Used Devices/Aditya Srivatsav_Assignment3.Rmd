@@ -1,0 +1,351 @@
+---
+title: "EAS 508 Assignment 3-- Aditya Srivatsav Lolla and 50559685"
+author: 
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```
+
+Notes on R:
+-	For the elastic net model, what we called λ in the videos, glmnet calls “alpha”; you can get a range of results by varying alpha from 1 (lasso) to 0 (ridge regression) [and, of course, other values of alpha in between].
+
+-	In a function call like glmnet(x,y,family=”mgaussian”,alpha=1) the predictors x need to be in R’s matrix format, rather than data frame format.  You can convert a data frame to a matrix using as.matrix – for example, x <- as.matrix(data[,1:n-1])
+
+- Rather than specifying a value of T, glmnet returns models for a variety of values of T. 
+
+```
+
+
+```{r}
+library(ggplot2)
+library(GGally)
+library(MASS)
+library(car)
+library(class)
+library(leaps)
+library(glmnet)
+library(randomForest)
+```
+
+
+# Question: Used Phones & Tablets Pricing Dataset
+
+The used and refurbished device market has grown considerably over the past decade as it provide cost-effective alternatives to both consumers and businesses that are looking to save money when purchasing one. Maximizing the longevity of devices through second-hand trade also reduces their environmental impact and helps in recycling and reducing waste. Here is a sample dataset of normalized used and new pricing data of refurbished / used devices.
+
+- device_brand: Name of manufacturing brand
+- os: OS on which the device runs
+- screen_size: Size of the screen in cm
+- 4g: Whether 4G is available or not
+- 5g: Whether 5G is available or not
+- front_camera_mp: Resolution of the rear camera in megapixels
+- back_camera_mp: Resolution of the front camera in megapixels
+- internal_memory: Amount of internal memory (ROM) in GB
+- ram: Amount of RAM in GB
+- battery: Energy capacity of the device battery in mAh
+- weight: Weight of the device in grams
+- release_year: Year when the device model was released
+- days_used: Number of days the used/refurbished device has been used
+- normalized_new_price: Normalized price of a new device of the same model
+- normalized_used_price (response variable): Normalized price of the used/refurbished device
+
+Read the data and answer the questions below:
+
+```{r}
+# Loading of the data
+set.seed(100)
+used_devices= read.csv("used_device_data.csv", header=TRUE, sep=",")
+
+used_devices$device_brand=as.factor(used_devices$device_brand)
+used_devices$os=as.factor(used_devices$os)
+used_devices$X4g=as.factor(used_devices$X4g)
+used_devices$X5g=as.factor(used_devices$X5g)
+
+#Dividing the dataset into training and testing datasets
+testRows = sample(nrow(used_devices),0.2*nrow(used_devices))
+testData = used_devices[testRows, ]
+trainData = used_devices[-testRows, ]
+row.names(trainData) <- NULL
+head(trainData)
+
+```
+
+## Part 1 [9 pts]: EXPLORATORY DATA ANALYSIS
+
+a). (3 pts) Using trainData, create a boxplot of response variable “normalized_used_price” and “os”, with “normalized_used_price” on the vertical axis. Interpret the plot.Which os devices are the most expensive?
+
+```{r}
+set.seed(100)
+#BoxPlot Indicates the ggplot between Operating System and Normalized Used Prices
+ggplot(trainData, aes(x = os, y = normalized_used_price)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Normalized Used Prices by Operating System",
+       x = "Operating System",
+       y = "Normalized Used Price") +
+  theme_minimal()
+
+```
+
+**Answer**:
+
+b). (6 pts) Using `trainData`, create a scatterplot matrix and a correlation table that includes the following continuous variables: `battery b) front_camera_mp c) weight`
+Does there appear to be multicollinearity among these three variables? Include your reasoning.
+
+```{r}
+set.seed(100)
+pairs(trainData[, c("battery", "front_camera_mp", "weight")],main = "Scatterplot Matrix")
+correlation_matrix <- cor(trainData[, c("battery", "front_camera_mp", "weight")], use = "complete.obs")
+correlation_matrix
+
+```
+
+**Answer**:
+
+
+## Part 2 [8 pts]: MULTIPLE LINEAR REGRESSION
+
+a). (6 pts) Create a multiple regression model using “normalized_used_price” as the response variable and all the predictors. Call it model1. Display the summary of the `model`.
+
+  - Which coefficients are statistically significant at the significance level of 0.05?
+
+  - Interpret the estimated coefficient of days_used and osWindows in the context of the problem. Mention any assumptions you make about other predictors clearly when stating the interpretation.
+
+
+```{r}
+set.seed(100)
+model1 <- lm(normalized_used_price ~ ., data = trainData)
+summary(model1)
+
+```
+
+**Answer**:
+the following coefficients are statistically significant at the 0.05 significance level (marked with *, **, or ***):
+
+Intercept
+device_brandBlackBerry
+device_brandNokia
+rear_camera_mp
+osOthers
+screen_size
+X4gyes
+front_camera_mp
+ram
+battery
+weight
+release_year
+rear_camera_mp
+normalized_new_price
+
+
+b). (2 pts) Check model1 for multicollinearity using variance inflation factor (vif). Is multicollinearity a problem.Explain your conclusion.
+
+```{r}
+set.seed(100)
+vif_values <- vif(model1)
+print(vif_values)
+```
+
+**Answer**:parts variables, such as screen_size, battery, weight, release_year, and os, exhibit multicollinearity, which can make parts of our model's predictions less dependable and more difficult to understand, according to the Variance Inflation Factor (VIF) values for our regression model. Particularly, the os variable exhibits the highest level of multicollinearity. We may need to eliminate some of these overlapping variables in order to improve our model.
+_____________
+
+## Part 3 [30 pts]: VARIABLE SELECTION
+
+a) (12 pts) Conduct bestsubset selection, forward, backward step-wise regression on model1 using AIC (assume no controlling variables), and all the selected model `model2, model3, and model4`, respectively. Display the summary of the model. Note: Do not forget to put “trace=F” in order to prevent long printed outputs.
+
+  - What is the AIC and BIC of the selected model?
+
+  - Which of the original variables are selected?
+  
+```
+You may use different methods other than the ones we used on the class. For example, using step(), see https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/step
+```
+
+```{r}
+#Best Model TepWise Regression
+subset_best_mdel <- step(model1, direction = "both", trace = FALSE)
+summary(subset_best_mdel)
+AIC(subset_best_mdel)
+BIC(subset_best_mdel)
+coef(subset_best_mdel)
+```
+#Forward StepWise Regression
+```{r}
+fcd_mdel <- step(model1, direction = "forward", trace = FALSE)
+summary(fcd_mdel)
+AIC(fcd_mdel)
+BIC(fcd_mdel)
+coef(fcd_mdel)
+```
+#BackWard Stepwise Regression
+```{r}
+bcd_mdel <- step(model1, direction = "backward", trace = FALSE)
+summary(bcd_mdel)
+AIC(bcd_mdel)
+BIC(bcd_mdel)
+coef(bcd_mdel)
+```
+
+**Answer**:We choose model 2 or 4 because of its lower AIC and BIC values compared to model3 in model2 we choose device_brand, os, screeen_size, X4g, X5g, rear_camera_mp, front_camera_mp,ram,battery,weight,release_year,days_used,normalized_new_price note that there are more subcatogories of this as listed above in the intercept
+
+b).(14 pts) Perform LASSO and RIDGE regression on the dataset “trainData” .Use `cv.glmnet()` to find the lambda value that minimizes the cross-validation error using 10 fold CV.
+
+Answer the following questions for both models.
+
+  - State the value of the optimal lambda.
+
+  - Fit the model with 100 values for lambda.
+
+  - Extract coefficients at the optimal lambda. Which coefficients are selected? Compare the number of coefficients selected by both the models. Why are you seeing this behavior?
+
+  - Plot the coefficient path for both the models and compare.
+
+```  
+ See https://www.science.smith.edu/~jcrouser/SDS293/labs/lab10-r.html 
+ 
+ Remember to use as.matrix() to process categorical predictors
+```
+
+```{r}
+x <- model.matrix(normalized_used_price ~ . - 1, data = trainData)  # Remove intercept
+y <- trainData$normalized_used_price
+cv.lasso <- cv.glmnet(x, y, alpha = 1, nfolds = 10)
+cv.ridge <- cv.glmnet(x, y, alpha = 0, nfolds = 10)
+lambda.lasso <- cv.lasso$lambda.min
+lambda.lasso
+lambda.ridge <- cv.ridge$lambda.min
+lambda.lasso
+lasso.fit <- glmnet(x, y, alpha = 1, lambda = cv.lasso$lambda)
+fit.ridge <- glmnet(x, y, alpha = 0, lambda = cv.ridge$lambda)
+coeff.lasso <- coef(lasso.fit, s = lambda.lasso)
+coeff.lasso
+ridge.coeff <- coef(fit.ridge, s = lambda.ridge)
+ridge.coeff
+plot(lasso.fit, xvar = "lambda", label = TRUE)
+plot(fit.ridge, xvar = "lambda", label = TRUE)
+```
+
+**Answer**: The ideal lambda value of 0.00470675 was determined for both LASSO and Ridge regression models. When these models were trained with 100 different lambda values, LASSO tended to select fewer coefficients, assigning many to zero, such as Apple and Google brands, as well as attributes like internal memory, which were entirely excluded at the optimal lambda. In contrast, Ridge regression retained all coefficients, although their magnitudes were reduced. This contrast is evident in the coefficient paths: as lambda increases, LASSO's path shows many coefficients converging to zero, indicating its capacity for variable selection and model simplification. Meanwhile, Ridge regression's path demonstrates that all coefficients shrink towards zero without reaching it, thereby maintaining all predictors in the model.
+
+c).(4 pts) Apply Principal Component Analysis and then create a regression model using the first few principal components, name it `pca_model`.
+
+```
+You can use the R function prcomp for PCA. (Note that to first scale the data, you can include scale. = TRUE to scale as part of the PCA function. Don’t forget that, to make a prediction for the new city, you’ll need to unscale the coefficients (i.e., do the scaling calculation in reverse)!)
+```
+
+```{r}
+set.seed(100)
+x <- trainData[, sapply(trainData, is.numeric)]  # selecting only numeric predictors
+x_scaled <- scale(x)
+pca <- prcomp(x_scaled, center = TRUE, scale. = TRUE)
+summary(pca)
+pca_scores <- pca$x[, 1:3]  # Extract the scores of the first three principal components
+pca_model <- lm(normalized_used_price ~ pca_scores, data = trainData)
+summary(pca_model)
+```
+
+
+## Part 4 [24 pts]: PREDICTION MODEL COMPARISON
+
+a).(14 pts) Using the testData, use the following models to predict the normalized price of the devices:
+
+- model1 (Part 2a)
+
+- model2 (Part 3a)
+
+- model3 (Part 3a)
+
+- model4 (Part 3a)
+
+- Lasso (Part 3b)
+
+- Ridge (Part 3b)
+
+- pca_model (Part 3c)
+
+Show the first five predictions using each model along with their true values. Are the values different?
+
+
+```{r}
+set.seed(100)
+test_matrix <- model.matrix(normalized_used_price ~ . - 1, data = testData)
+
+predictions_model1 <- predict(model1, newdata = testData)
+predictions_model2 <- predict(subset_best_mdel, newdata = testData)
+predictions_model3 <- predict(fcd_mdel, newdata = testData)
+predictions_model4 <- predict(bcd_mdel, newdata = testData)
+
+
+predictions_lasso <- predict(lasso.fit, s = lambda.lasso, newx = as.matrix(test_matrix))
+predictions_ridge <- predict(fit.ridge, s = lambda.ridge, newx = as.matrix(test_matrix))
+
+
+test_scores <- predict(pca, newdata = scale(testData[, sapply(testData, is.numeric)]))
+predictions_pca <- predict(pca_model, newdata = data.frame(pca_scores = test_scores[, 1:3]))
+
+testData$normalized_used_price[1:5]
+
+head(predictions_model1, 5)
+
+head(predictions_model2, 5)
+
+head(predictions_model3, 5)
+
+head(predictions_model4, 5)
+
+head(predictions_lasso, 5)
+
+head(predictions_ridge, 5)
+
+head(predictions_pca, 5)
+
+```
+
+**Answer**:The majority of the values appear to be fairly close to the actual value, despite some differences in values.
+
+
+b). (10 pts) Compare the predictions using mean squared prediction error. Which model performed the best? Reasoning your answer and discussion your choice(s).
+
+```{r}
+set.seed(100)
+set.seed(100)
+
+mspe_model1 <- mean((predictions_model1 - testData$normalized_used_price)^2)
+mspe_model2 <- mean((predictions_model2 - testData$normalized_used_price)^2)
+mspe_model3 <- mean((predictions_model3 - testData$normalized_used_price)^2)
+mspe_model4 <- mean((predictions_model4 - testData$normalized_used_price)^2)
+mspe_lasso <- mean((predictions_lasso - testData$normalized_used_price)^2)
+mspe_ridge <- mean((predictions_ridge - testData$normalized_used_price)^2)
+mspe_pca <- mean((predictions_pca - testData$normalized_used_price)^2)
+
+cat("MSPE Model 1:", mspe_model1, "\n")
+cat("MSPE Model 2:", mspe_model2, "\n")
+cat("MSPE Model 3:", mspe_model3, "\n")
+cat("MSPE Model 4:", mspe_model4, "\n")
+cat("MSPE Lasso:", mspe_lasso, "\n")
+cat("MSPE Ridge:", mspe_ridge, "\n")
+cat("MSPE PCA Model:", mspe_pca, "\n")
+
+
+```
+
+**Answer**: The MSPE of all the models are as shown above
+1.The Lasso model achieves the lowest MSPE of 0.05399679, indicating its superior performance compared to other models. Its capability to conduct variable selection and regularization effectively reduces overfitting and enhances prediction accuracy on the testData.
+2.Following closely, both Model 1 and Model 3 exhibit identical MSPE values of 0.05464308, demonstrating reasonably accurate predictions, nearly matching the Lasso model's performance.
+3.The Ridge model follows with a slightly higher MSPE of 0.05448073, still better than Models 2 and 4.
+4.However, the PCA Model shows a significantly higher MSPE of 0.5908957, suggesting poorer prediction performance compared to other models. This discrepancy might arise from the loss of original data variability captured by the principal components, implying that crucial predictive information was not retained.
+5. In summary, the Lasso model excels due to its regularization technique, effectively simplifying the model while maintaining or enhancing predictive accuracy, particularly beneficial in scenarios with many variables or high-dimensional datasets. Conversely, the PCA model's poor performance results from reducing the dataset to principal components, potentially discarding essential predictive information.
+
+
+
+
+
+
+
+

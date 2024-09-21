@@ -1,0 +1,477 @@
+---
+title: "EAS 508 Assignment 1-- Lolla Aditya Srivatsav and 50559685"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ISLR2)
+library(ggplot2)
+```
+
+In case you need to write math expression, please use the quick tutorial as the reference: https://www1.cmc.edu/pages/faculty/aaksoy/latex/latexthree.html
+
+# Question 1
+
+[5 pts] Describe a situation or problem from your job, everyday life, current events, etc., for which a classification model would be appropriate. List some (up to 5) predictors that you might use.
+
+**Solution to Question 1**
+There are many events which we can use in everyday life to classify the models or events in the market
+1. Credit Score: A high Credit will have a secured loan where there will be low risk
+2. Job Status and Secured House: A job with fixed income can pay their debts for the long time and any business can be filed in the UCC1 and UCC3 and approved from the jurisdiction
+3.Aerospace Manufacturing: An Aerospace or Air Force plane manufacturing companies can plot the details for the new flights and get the raw data requirements, budget can be classified with the classification models and prepare the data for the further process.
+4. Debt-to-Income Ratio: A lower ratio suggests that the applicant has manageable debt relative to their income.
+5.Loan Amount: Larger loan amounts might increase the risk of default, especially if they exceed the applicant's capacity to repay.
+
+# Question 2. 
+
+[5 pts] What's the main difference between supervised and unsupervised learning? Give one benefit and drawback for supervised and unsupervised learning, respectively.
+
+**Solution to Question 2**
+
+`1. Supervised Learning:
+In supervised Machine Learning, the algorithm is trained on a dataset that is labeled, meaning each input is associated with corresponding target output.
+2.Benefit: Supervised Machine learning is effective for tasks where the desired output is known, making it suitable for the tasks like classification and regression
+3. Drawback: One drawback is that it relies heavily on the availability of the labeled data, which can be time consuming  expensive to acquire, especially for large datasets or niche domains
+
+2. Unsupervised Learning:
+1. In Unsupervised learning, the algorithm is trained on unlabeled data, and its goal is to find is to find hidden patterns or structures within the data.
+2. Benefit: Unsupervised learning can uncover insights from data without the need for labeled examples, making it useful for exploratory data Analysis, clustering and anomaly detection.
+3. Drawback:Since unsupervised learning lacks explicit labels, evaluating the performance of the model can be more challenging compared to supervised learning. Additionally, interpreting the results may require human intervention to understand the discovered patterns or clusters.
+
+
+# Question 3 [18 pts]
+
+This question relates to the College data set, which can be found in the file College.csv in the folder. It contains a number of variables for 777 different universities and colleges in the US. The variables are
+
+-	Private : Public/private indicator
+-	Apps : Number of applications received
+-	Accept : Number of applicants accepted
+-	Enroll : Number of new students enrolled
+-	Top10perc : New students from top 10 % of high school class
+-	Top25perc : New students from top 25 % of high school class
+-	F.Undergrad : Number of full-time undergraduates
+-	P.Undergrad : Number of part-time undergraduates
+-	Outstate : Out-of-state tuition
+-	Room.Board : Room and board costs
+-	Books : Estimated book costs
+-	Personal : Estimated personal spending
+-	PhD : Percent of faculty with Ph.D.’s
+-	Terminal : Percent of faculty with terminal degree
+-	S.F.Ratio : Student/faculty ratio
+-	perc.alumni : Percent of alumni who donate
+-	Expend : Instructional expenditure per student
+-	Grad.Rate : Graduation rate
+
+Before reading the data into R, it can be viewed in Excel or a text editor.
+
+- (a). [2 pts] Use the read.csv() function to read the data into R. Call the loaded data college. Make sure that you have the directory set to the correct location for the data. 
+
+**Solution to Question 3(a)**
+`put your solution here `
+
+```{r, echo=TRUE}
+# Read.csv file for the college data
+file_path <- "/Users/adityasrivatsav/Documents/EAS508/HW 1/College.csv"
+College <- read.csv(file_path)
+
+```
+
+- (b). [2 pts]	Look at the data using the View() function. You should notice that the first column is just the name of each university. We don’t really want R to treat this as data. However, it may be handy to have these names for later. Try the following commands:
+
+- `rownames(college) <- college[,1 ]`
+
+- `View(college)`
+
+You should see that there is now a row.names column with the name of each   
+university recorded. This means that R has given each row a name corresponding
+to the appropriate university. R will not try to perform calculations on the row 
+names. However, we still need to eliminate the first column in the data where the 
+names are stored. Try
+
+` >college <- college[, -1]`
+
+` > View(college)`
+
+Now you should see that the first data column is Private. Note that another column labeled row.names now appears before the Private column. However, this is not a data column but rather the name that R is giving to each row.
+
+**Solution to Question 3(b)**
+
+`put your solution here `
+
+```{r}
+# Inspect the structure to confirm the correct column (assuming it's still the first column)
+head(College)
+
+# Assuming the first column is correct and contains unique university names
+# Let's ensure uniqueness
+if(!anyDuplicated(College[,1])) {
+  rownames(College) <- as.character(College[,1])
+  College <- College[, -1] # Remove the first column after setting row names
+} else {
+  print("The first column contains duplicate values. Please check the data.")
+}
+
+# Now, you can safely use View(college) to inspect the modified dataframe
+View(College)
+
+```
+
+- (c).
+   
+  - (i). [2 pts]  Use the `summary()` function to produce a numerical summary of the variables in the data set.
+  
+```{r}
+summary(College)
+```
+   
+   - (ii). [2 pts] Use the `pairs()` function to produce a scatterplot matrix of the first ten columns or variables of the data. Recall that you can reference the first ten columns of a matrix A using A[,1:10]. Briefly state your observations.
+
+```{r}
+#Read the csv file
+data <- read.csv("College.csv")
+#Summarize the data
+summary(data)
+#Showing first 10 columns as the matrix
+pairs(data[, sapply(data[1:10], is.numeric)])
+```
+
+   - (iii). [3 pts] Use the `plot()` function to produce side-by-side boxplots of Outstate versus Private. Briefly state your observations.
+
+```{r}
+boxplot(Outstate ~ Private, data = data, 
+        xlab = "Private", 
+        ylab = "Outstate", 
+        main = "Boxplot of Outstate by Private", 
+        col = c("blue","green"))
+```
+
+  - (iv).[2 pts] Create a new qualitative variable, called Elite, by binning the Top10perc variable. We are going to divide universities into two groups based on whether or not the proportion of students coming from the top 10 % of their high school
+classes exceeds 50 %.
+
+`> Elite <- rep("No", nrow(college))`
+
+`> Elite[college$Top10perc > 50] <- "Yes"`
+
+`> Elite <- as.factor(Elite)`
+
+`> college <- data.frame(college , Elite)`
+
+Use the `summary()` function to see how many elite universities
+there are. Now use the `plot()` function to produce
+side-by-side boxplots of Outstate versus Elite.
+
+```{r}
+Elite <- rep("No", nrow(College))
+Elite[College$Top10perc > 50] <- "Yes"
+Elite <- as.factor(Elite)
+
+#Add Elite Variables to the College DataFrame
+College <- data.frame(College, Elite)
+
+#Summary of Elite Universities
+summary(College$Elite)
+
+# Plot side-by-side boxplots of Outstate versus Elite
+boxplot(Outstate ~ Elite, 
+data = College, 
+xlab = "Elite", 
+ylab = "Outstate", 
+main = "Boxplot of Outstate by Elite", 
+col = c("blue", "green"))
+```
+
+  - (v)[2 pts] Use the hist() function to produce some histograms with differing numbers of bins for a few of the quantitative variables. You may find the command `par(mfrow = c(2, 2))` useful: it will divide the print window into four regions so that four plots can be made simultaneously. Modifying the arguments to this function will divide the screen in other ways.
+
+```{r}
+# Set up the plot window to display four plots simultaneously in 2 * 2 Grid
+par(mfrow = c(2, 2))
+hist(College$Apps, breaks = 10, main = "Histogram of Apps (10 bins)")
+hist(College$Accept, breaks = 20, main = "Histogram of Accept (20 bins)")
+hist(College$Enroll, breaks = 30, main = "Histogram of Enroll (30 bins)")
+hist(College$Outstate, breaks = 40, main = "Histogram of OutState (40 bins)")
+```
+
+  - (vi)[3 pts]. Continue exploring the data, and provide a brief summary
+of what you discover.
+```{r}
+#university names with the most students in the top 10% of the class
+row.names(College)[which.max(College$Top10perc)]
+acceptance_rate <-College$Accept / College$Apps
+#Lowest Acceptance Rate
+row.names(College)[which.min(College$Top10perc)]
+#Highest Acceptance Rate
+row.names(College)[which.max(College$Top10perc)]
+
+plot(Grad.Rate ~ Outstate, data = College)
+#College with Low Acceptance Raate
+plot(S.F.Ratio ~ I(Accept/Apps), data = College)
+
+#The highest Graduation Rate
+plot(Grad.Rate ~ Top10perc, data = College)
+
+```
+
+# Question 4 [16 pts]
+This exercise involves the Boston housing data set.
+
+   -  (a).[2 pts] To begin, load in the Boston data set. The Boston data set is part of the ISLR2 library.
+
+`> library(ISLR2)`
+
+Now the data set is contained in the object Boston.
+
+`> Boston`
+
+Read about the data set:
+
+`> ?Boston`
+
+How many rows are in this data set? How many columns? What do the rows and columns represent?
+
+```{r}
+library(ISLR2)
+data(Boston)
+nrow(Boston)
+ncol(Boston)
+?Boston
+str(Boston)
+```
+
+- (b).[2 pts] Make some pairwise scatterplots of the predictors (columns) in this data set. Describe your findings.
+
+```{r}
+pairs(Boston)
+```
+
+- (c).[2 pts] Are any of the predictors associated with per capita crime rate? If so, explain the relationship.
+```{r}
+plot(crim ~ age, data = Boston, log = "xy")
+#Closer to work area crime rate
+plot(crim ~ dis, data = Boston, log = "xy")
+#Higher index of accessibility to radial highways, more crime
+plot(crim ~ rad, data = Boston, log = "xy")
+#as box plots, since rad appears categorial
+plot(crim ~ as.factor(rad),
+    log = "y",
+    data = Boston,
+    xlab = "Accessibility to radial Highways",
+    ylab = "log of crime")
+#Tax is higher, crime is more
+plot(crim ~ tax, data = Boston, log = "xy")
+# Higher Pupil:teacher ratio, more crime
+plot(crim ~ ptratio, log = "xy", data =  Boston)
+#Correlations
+cor(Boston)
+```
+
+
+- (d)[2 pts] Do any of the census tracts of Boston appear to have particularly high crime rates? Tax rates? Pupil-teacher ratios? Comment on
+the range of each predictor.
+```{r}
+par(mfrow = c(1, 3))
+hist(Boston$crim[Boston$crim > 1], breaks = 25)
+hist(Boston$tax, breaks = 25)
+hist(Boston$ptratio, breaks =  25)
+```
+
+- (e)[1 pt] How many of the census tracts in this data set bound the Charles river?
+```{r}
+sum(Boston$chas == 1)
+```
+
+- (f)[1 pt] What is the median pupil-teacher ratio among the towns in this data set?
+```{r}
+median(Boston$ptratio)
+```
+
+- (g)[3 pts] Which census tract of Boston has lowest median value of owneroccupied homes? What are the values of the other predictors for that census tract, and how do those values compare to the overall ranges for those predictors? Comment on your findings.
+```{r}
+t(subset(Boston, medv == min(medv)))
+summary(Boston)
+```
+
+- (h)[3 pts] In this data set, how many of the census tracts average more than seven rooms per dwelling? More than eight rooms per dwelling? Comment on the census tracts that average more than eight rooms per dwelling.
+
+```{r}
+sum(Boston$rm > 7)
+sum(Boston$rm > 8)
+summary(subset(Boston, rm > 8))
+summary(Boston)
+```
+
+
+# Question 5. [6 pts]
+Suppose we have a data set with five predictors, $X1 = \text{GPA}, X2 =IQ, X3 = \text{Level (1 for College and 0 for High School)}, X4 =\text{Interaction between GPA and IQ, and }X5 = \text{Interaction between GPA and Level.}$ The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get $\hat{\beta}_0 = 50, \hat{\beta}_1 = 20, \hat{\beta}_2 = 0.07, \hat{\beta}_3 = 35, \hat{\beta}_4 = 0.01, \hat{\beta}_5 = −10$.
+
+- (a)[3 pts] Predict the salary of a college graduate with IQ of $110$ and a GPA of $4.0$.
+
+```{r}
+#Given Coefficients
+beta_0 <- 50
+beta_1 <- 20
+beta_2 <- 0.07
+beta_3 <- 35
+beta_4 <- 0.01
+beta_5 <- -10
+
+#Given Predictor Values
+GPA <- 4.0
+IQ <- 110
+Level <- 1
+
+# Compute Interaction terms
+Interaction_GPA_IQ <- GPA *  IQ
+Interaction_GPA_Level <- GPA * Level
+
+# Compute Predicted Salary
+predicted_salary <- beta_0 + beta_1 * GPA + beta_2 * IQ + beta_3 * Level + beta_4 * Interaction_GPA_IQ + beta_5 * Interaction_GPA_Level
+
+#Print Predicted Salary
+print(predicted_salary)
+
+```
+
+- (b)[3 pts] True or false: Since the coefficient for the GPA/IQ interaction term is very small, there is very little evidence of an interaction effect. Justify your answer.
+#Solution 
+False. The size of the coefficient for the GPA/IQ interaction term alone cannot determine the presence or absence of an interaction effect. While a small coefficient might suggest a weaker interaction effect, it doesn't necessarily imply the absence of interaction.
+1.In linear regression, the significance of coefficients is assessed through hypothesis testing, typically using the associated p-values. To determine the significance of the interaction effect between GPA and IQ on starting salary, we need to check the p-value associated with the coefficient estimate for the GPA/IQ interaction term ($\hat{\beta}_4$).
+
+2.If the p-value is sufficiently small (typically less than a chosen significance level, e.g., 0.05), then we can reject the null hypothesis that there is no interaction effect. In this case, we would have evidence supporting the presence of an interaction effect between GPA and IQ on the starting salary.
+
+3.Therefore, whether there is evidence of an interaction effect cannot be determined solely by the size of the coefficient for the interaction term; the significance of this coefficient (through its associated p-value) is crucial in making such a determination.
+
+# Question 6. [34 pts]
+This question involves the use of multiple linear regression on the
+Auto data set.
+```{r}
+data(Auto)
+data<-Auto
+head(data)
+```
+
+- (a).[3 pts] Produce a scatterplot matrix which includes all numeric variables
+in the data set. Please give the interpretation of the plot.
+
+```{r}
+dataAuto <- read.csv("/Users/adityasrivatsav/Documents/EAS508/HW 1/Auto.csv",na.strings = "?")
+dataAuto <- na.omit(dataAuto)
+dim(dataAuto)
+#summary of the data Auto
+summary(dataAuto)
+pairs(dataAuto[, sapply(dataAuto, is.numeric)])
+
+```
+- (b) [3 pts] Compute the matrix of correlations between the variables. You will need to exclude the name variable, which is qualitative. Explain your discoveries, find the top 1 predictors.
+
+```{r}
+# Correlation Matrix
+correlation_matrix <- cor(dataAuto[, sapply(dataAuto, is.numeric)])
+# Find the top predictor
+top_predictor <- colnames(correlation_matrix)[which.max(correlation_matrix["mpg", ])]
+
+# Print correlation matrix
+print(correlation_matrix)
+
+# Print top predictor
+print(paste("Top Predictor:", top_predictor))
+```
+
+- (c)[6 pts] perform a simple linear regression use MPG as response and the top predictor. Produce diagnostic plots of the linear regression fit (similar as the ones we showed on class to check the assumptions of linear regression: linearity, normality, constant variance). Interpret your discoveries.
+
+```{r}
+dataAuto <- read.csv("/Users/adityasrivatsav/Documents/EAS508/HW 1/Auto.csv",na.strings = "?")
+dataAuto <- na.omit(dataAuto)
+# Calculate correlations between "MPG" and other variables
+correlations <- cor(dataAuto[, -9], dataAuto$mpg)
+
+# Find the top predictor with the highest absolute correlation
+top_predictor <- names(which.max(abs(correlations)))
+
+# Fit linear regression model
+lm_model <- lm(mpg ~ ., data = dataAuto)
+
+# Generate diagnostic plots
+par(mfrow = c(2, 2))
+plot(lm_model)
+```
+
+
+
+
+- (d)[4 pts] Use the `lm()` function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output. For instance:
+
+  - i. Is there a relationship between the predictors and the response?
+  
+  - ii. Which predictors appear to have a statistically significant relationship to the response?
+  
+  - iii. What does the coefficient for the year variable suggest?
+
+```{r}
+# Perform multiple linear Regression
+lm_model <- lm(mpg ~ . - name, data = dataAuto)
+# Print summary of the regression results
+summary(lm_model)
+
+
+```
+  
+  
+- (e)[5 pts] Produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?
+
+```{r}
+# Produce diagnostic plots
+par(mfrow = c(2,2))
+plot(lm_model)
+
+```
+  
+- (f) [5 pts] Fit a multiple linear regression model called model_tops using MPG as the response and the top 3 predicting variables with the strongest relationship with MPG. Compare the coefficients of the 3 predictor in model_tops with the model that used all numeric predictors, which ones are larger?  Why? 
+ 
+```{r}
+# Extract coefficients from the previous model
+coefficients_all <- coef(lm_model)
+
+# Find the top 3 predictors with the strongest relationship with MPG
+top_3_predictors <- names(sort(abs(coefficients_all[-1]), decreasing = TRUE)[1:3])
+
+# Create a new model using only the top 3 predictors
+model_tops <- lm(mpg ~ ., data = dataAuto[, c("mpg", top_3_predictors)])
+
+# Compare coefficients
+coefficients_model_tops <- coef(model_tops)
+coefficients_all
+coefficients_model_tops
+
+``` 
+
+- (g)[3 pts] Use the * and : symbols to fit linear regression models with interaction effects. Do any interactions appear to be statistically
+significant?
+
+```{r}
+# Fit Linear Regression model with interaction effects
+model_interaction <- lm(mpg ~ .* ., data = dataAuto)
+
+# Check for significiant interactions
+summary(model_interaction)
+
+``` 
+
+- (h)[5 pts] Try a few different transformations of the variables, such as $\log(X), \sqrt{X}, X^2$. Comment on your findings.
+
+```{r}
+# Fit Linear Regression model with different transformation
+different_transformation <- lm(mpg ~ . + I(log(displacement)) + I(sqrt(weight)) + I(weight^2), data = dataAuto)
+
+# Output the summary of the different transformation
+summary(different_transformation)
+
+``` 

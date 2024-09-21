@@ -1,0 +1,628 @@
+---
+title: "EAS 508 Assignment 2-- username: alolla and ub number: 50559685"
+author: Lolla Aditya Srivatsav
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ISLR2)
+library(ggplot2)
+library(MASS)
+library(car)
+library(class)
+```
+
+In case you need to write math expression, please use the quick tutorial as the reference: https://www1.cmc.edu/pages/faculty/aaksoy/latex/latexthree.html
+
+# Question 1 [5 points]
+
+Describe a situation or problem from your job, everyday life, current events, etc., for which a logistic regression model would be appropriate. List some (up to 5) predictors that you might use.
+
+<span style='color:red'>Please show your work.</span>
+Lets Consider a situation where a marketing team wants to predict a customer will purchase a product on various aspects and  behavioral characteristics. Lets develop a predictive model on the customers and their purchasing behavior.
+ 1.Age: Age is one of the significant predictor where the behavior of purchase of an item is going to be varied as per the age group.
+ 2. Income: The level of income in a family is important as the purchase is going to differed as per the Income.
+ 3. Gender: The buying pattern is going to be different as per the gender.
+ 4. Website Visits: The website visit is going to be differed as per the age where a working professional visits the different business websites for the research data and the growing up kid visits the Youtube for the Cartoon channels.
+ 5. Previous Purchases: The customer an their behavior depends on the previous purchases and the hospitality of the certain company or the shopkeeper. If the Material is good enough the customer is going to repeat the purchase in the same company.
+ 
+# Question 2 [20 points]
+
+In this problem, we will use the Naive Bayes algorithm to fit a spam filter by hand.  This question does not involve any programming but only derivation and hand calculation.
+Spam filters are used in all email services to classify received emails as “Spam” or “Not
+Spam”. A simple approach involves maintaining a vocabulary of words that commonly
+occur in “Spam” emails and classifying an email as “Spam” if the number of words fromthe dictionary that are present in the email is over a certain threshold. We are given the
+vocabulary consists of 15 words
+
+$$V = {\text{secret, offer, low, price, valued, customer, today, dollar, million, sports, is, for, play, healthy, pizza}}.$$
+
+We will use $V_i$ to represent the $i$th word in $V$ . As our training dataset, we are also given 3 example spam messages,
+
+- million dollar offer for today
+- secret offer today
+- secret is secret
+
+and 4 example non-spam messages
+
+- low price for valued customer
+- play secret sports today
+- sports is healthy
+- low price pizza
+
+Recall that the Naive Bayes classifier assumes the probability of an input depends on
+its input feature. The feature for each sample is defined as $x^{(i)}=[x^{(i)}_1, x^{(i)}_2,\cdots, x^{(i)}_p], i=1,\cdots,m$
+ and the class of the $i$th sample is $y^{(i)}$. In our case the length of the input vector is $p= 15$, which is equal to the number of words in the vocabulary $V$ (hint: recall that how did we define a dummy variable). Each entry $x^{(i)}_j$ is equal to the number of times word $V_j$ occurs in the $i$-th message.
+
+1.[5 points] Calculate class prior $P(y = 0)$ and $P(y = 1)$ from the training data, where $y=0$ corresponds to spam messages, and $y=1$ corresponds to non-spam messages. Note that these class prior essentially corresponds to the frequency of each class in the training sample. Write down the predictor vectors for each spam and non-spam messages.
+```{r}
+Vocabulary <- c("secret", "offer", "price", "valued","customer", "today", "dollar", "million", "sports", "is", "for", "play", "healthy", "pizza")
+
+# Define the Span Messages
+spam_messages <- list(
+  "million dollar offer for today",
+  "secret offer today",
+  "secret is secret"
+)
+
+# Define the non-spam messages
+non_spam_messages <- list(
+"low price for valued customer",
+"play secret sports today",
+"sports is healthy",
+"low price pizza"
+)
+
+# Count number of spam and non-spam messages
+num_spam <- length(spam_messages)
+num_non_spam <- length(non_spam_messages)
+
+# Total number of messages
+total_messages <- num_spam + num_non_spam
+
+#calculate class priorities
+P_y0 <- num_spam / total_messages
+P_y1 <- num_non_spam / total_messages
+
+# Initiate the Predictor vectors for the spam and non-spam messages
+predictor_vector_spam <- matrix(0, nrow = num_spam, ncol = length(Vocabulary))
+predictor_vector_non_spam <- matrix(0, nrow = num_non_spam, ncol = length(Vocabulary))
+
+# Define function to count word occurance in a message
+count_words <- function(message, Vocab){
+  counts <- sapply(Vocab, function(word) sum(grepl(word, message, ignore.case = TRUE)))
+  return(counts)
+}
+#Populate predictor vectors for spam messages
+for (i in 1:num_spam) {
+  predictor_vector_spam[i, ] <- count_words(spam_messages[[i]], Vocabulary)
+}
+for (i in 1:num_non_spam) {
+  predictor_vector_non_spam[i, ] <- count_words(non_spam_messages[[i]], Vocabulary)
+}
+# Output class priors and predictor vectors
+cat("Class Priors:\n")
+cat("P(y = 0):", P_y0, "\n")
+cat("P(y = 1):", P_y1, "\n\n")
+
+cat("Predictor Vector for Spam Messages:\n")
+print(predictor_vector_spam)
+
+cat("\nPredictor Vector for Non-Spam Messages:\n")
+print(predictor_vector_non_spam)
+```
+2. [15 points] In the Naive Bayes model, assuming the keywords are independent of each other (this is a simplification), the likelihood of a sentence with its feature vector $x$
+given a class $c$ is given by 
+$$P(x|y=c)=\prod_{i=1}^{15}P(x_i|y=c), c=\{0,1\}.$$
+\usepackage{amsmath}
+\documentclass{article}
+\begin{document}
+title{Classification of "today is secret" using Naive Bayes Method" \date{} \maketitle \section{Objective}
+Using the provided training data, the Naive Bayes classifier is intended to determine whether or not the message "today is secret" qualifies as spam.
+
+Part {Given Information}
+Three spam messages and four non-spam messages totaling fifteen words make up the training set. From these data, class priors are computed:
+The
+\begin{itemize}}For spam, item $P(y=0) = \frac{3}{7}$
+\For non-spam, item $P(y=1) = \frac{4}{7}$
+\section{Method} 
+\end{itemize}
+The independence of the features—in this case, the words—is assumed by the Naive Bayes classifier. \[P(x|y=c)=\prod_{i=1}^{15}P(x_i|y=c), \quad c=\{0,1\}.\] 
+\section{Likelihood Calculations} gives the likelihood of a message for a class $c$.
+We approximate based on the presence of these words in the training data to determine the chance of occurrence of each word given the class (spam or not spam) for the message "today is secret".
+
+Considering approximations:
+\begin{align*}} &P(\text{"today"}|y=0) = \frac{2}{3}, \quad P(\text{"today"}|y=1) = \frac{1}{4}, \\ &P(\text{"is"}|y=0) = \frac{1}{3}, \quad \quad \quad P(\text{"is"}|y=1) = \frac{1}{2}, \\&P(\text{"secret"}|y=0) = 1, \quad \quad \quad \quad P(\text{"secret"}|y=1) = \frac{1}{4}.
+\end{align*} \section{Calculating Posterior The odds}
+The normalization factor $P(x)$ is used to determine the posterior probability for each class.
+\[P(x|y=c)P(y=c)} = \frac{P(x|y=c)`{P(x)}.\]
+
+We obtain unnormalized posterior probabilities for spam ($y=0$) and not for spam ($y=1$) by substituting the values for $P(x|y=c)$ and $P(y=c)$. These are as follows:
+\[P(y=0|x) \propto \frac{1}{3} \cdot 1 \cdot \frac{3}{7},\]
+\[P(y=1|x) \propto \frac{1}{4} \cdot \frac{1}{2} \cdot \frac{1}{4} \cdot \frac{4}{7}.\]
+
+The total of these unnormalized probabilities is the normalization factor $P(x)$.
+
+\section{Outcomes}
+The following approximate values represent the posterior probabilities that the message is not spam and is in fact spam: \[P(y=0|x) \approx 0.842,\]
+P(y=1|x) is around 0.158.
+
+\section{Concluding Remarks}
+The message "today is secret" is more likely to be categorized as spam since $P(y=0|x) > P(y=1|x)$.
+
+\end{document}
+
+# Question 3 [16 points]
+The provided dataset is a subset of the public data from the 2022 EPA Automotive Trends Report. It will be used to study the effects of various vehicle characteristics on CO2 emissions. The dataset consists of a dataframe with 1703 observations with the following 7 variables:
+
+- Model.Year: year the vehicle model was produced (quantitative)
+- Type: vehicle type (qualitative)
+- MPG: miles per gallon of fuel (quantitative)
+- Weight: vehicle weight in lbs (quantitative)
+- Horsepower: vehicle horsepower in HP (quantitative)
+- Acceleration: acceleration time (from 0 to 60 mph) in seconds (quantitative)
+- CO2: carbon dioxide emissions in g/mi (response variable)
+
+(1).[3 points] Read the data, Fit a multiple linear regression model called model1 using CO2 as the response and all predicting variables. Using $\alpha=0.05$, which of the estimated coefficients that were statistically significant.
+```{r}
+model_1 <- read.csv("emissions.csv")
+# Fit multiple linear regression model
+model_1 <- lm(CO2 ~ Model.Year + Type + MPG + Weight + Horsepower + Acceleration, data = model_1)
+# Summarize the model
+summary(model_1)
+```
+(2).[2 points] Is the overall regression (model1) significant at an $\alpha$-level of $0.05$? Explain how you determined the answer.
+```{r}
+# Perform F-test for overall significance of the regression model
+anova_result <- anova(model_1)
+
+# Extract p-value from the ANOVA table
+p_value <- anova_result$`Pr(>F)`[1]
+
+# Check if p-value is less than alpha
+alpha <- 0.05
+if (p_value < alpha) {
+  cat("The overall regression (model_1) is significant at an alpha-level of 0.05.\n")
+} else {
+  cat("The overall regression (model_1) is not significant at an alpha-level of 0.05.\n")
+}
+
+# Output the p-value
+cat("p-value:", p_value, "\n")
+```
+(3).[6 points] **Identifying Influential Data Points** Cook's Distances
+
+The basic idea behind the measure is to delete the observations one at a time, each time refitting the regression model on the remaining $n-1$ observations. Then, we compare the results using all $n$ observations to the results with the $i$th observation deleted to see how much influence the observation has on the analysis. Analyzed as such, we are able to assess the potential impact each data point has on the regression analysis. One of such a method is called `Cook's distance`. To learn more on Cook's distance in R, see https://rpubs.com/DragonflyStats/Cooks-Distance.
+
+Create a plot for the Cook’s Distances (use model1). Using a threshold of $1$, are there any outliers? If yes, which data points?
+```{r}
+# Calculate Cook's distances
+cook_dist <- cooks.distance(model_1)
+
+# Plot Cook's distances
+plot(cook_dist, pch = 20, main = "Cook's Distances", xlab = "Observation Index", ylab = "Cook's Distance")
+
+# Add a threshold line at Cook's distance = 1
+abline(h = 1, col = "cyan")
+
+# Identify outliers
+outliers <- which(cook_dist > 1)
+if (length(outliers) > 0) {
+  cat("Outliers detected at observation indices:", outliers, "\n")
+} else {
+  cat("No outliers detected.\n")
+}
+
+```
+
+(4).[5 points] **Detecting Multicollinearity Using Variance Inflation Factors (VIF)** 
+
+The effects that multicollinearity can have on our regression analyses and subsequent conclusions, how can we tell if multicollinearity is present in our data? A variance inflation factor exists for each of the predictors in a multiple regression model. For example, the variance inflation factor for the estimated regression coefficient $\beta_j$—denoted $VIF_j$ —is just the factor by which the variance of $\beta_j$ is "inflated" by the existence of correlation among the predictor variables in the model.
+
+In particular, the variance inflation factor for the $j$th predictor is: $ VIF_j=\frac{1}{1-R_j^2}$ where $R^2_j$  is the $R^2$-value obtained by regressing the jth predictor on the remaining predictors. 
+
+A VIF of $1$ means that there is no correlation among the $j$th predictor and the remaining predictor variables, and hence the variance of $\beta_j$ is not inflated at all. The general rule of thumb is that VIFs exceeding $4$ warrant further investigation, while VIFs exceeding $10$ are signs of serious multicollinearity requiring correction. For more information, see https://search.r-project.org/CRAN/refmans/usdm/html/vif.html.
+
+Calculate the VIF of each predictor (use model1). Using a threshold of $\max(10, \frac{1}{1-R^2})$ what conclusions can you make regarding multicollinearity?
+```{r}
+#load the 'car' package
+library(car)
+# Calculate VIF values for the each predictor
+vif_values <- car::vif(model_1)
+# Print VIF Values
+print(vif_values)
+# Check the multicollinearity
+threshold <- -10
+problematic_predictors <- vif_values[vif_values > threshold]
+
+if(length(problematic_predictors) > 0){
+  cat("The following predictors is showing the multicollinearity:\n")
+}else{
+  cat("No multicollinearity issues detected.\n")
+}
+```
+# Question 4 [16 points]
+
+(1).  Using the GermanCredit data set german.credit (Download the dataset from http://archive.ics.uci.edu/ml/datasets/Statlog+%28German+Credit+Data%29 and read the description), use logistic regression to find a good predictive model for whether credit applicants are good credit risks or not. Show your model (factors used and their coefficients), the output, and the quality of fit. You can use the glm function in R. To get a logistic regression (logit) model on data where the response is either zero or one, use family=binomial in your glm function call. Steps including:
+
+   a.[2 points] load the dataset 
+```{r}
+# Step 1: Load the Dataset
+url <- "http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data"
+data <- read.table(url, header = FALSE, sep = " ")
+colnames(data) <- c("existing_account", "duration", "credit_history", "purpose", "credit_amount",
+                    "savings_account", "employment_duration", "installment_rate", "personal_status_sex",
+                    "other_debtors", "present_residence", "property", "age", "other_installment_plans",
+                    "housing", "existing_credits", "job", "dependents", "telephone", "foreign_worker", "credit_risk")
+
+# Step 2: Explore the Dataset
+str(data)
+summary(data)
+
+# Step 3: Data Preprocessing
+# Convert categorical variables to factors
+data[c("existing_account", "credit_history", "purpose", "savings_account", "employment_duration","personal_status_sex", "other_debtors", "property", "other_installment_plans","housing", "job", "telephone", "foreign_worker", "credit_risk")] <- lapply(data[c("existing_account", "credit_history", "purpose", "savings_account", "employment_duration",                 "personal_status_sex","other_debtors", "property", "other_installment_plans","housing", "job", "telephone", "foreign_worker", "credit_risk")], factor)
+
+# Step 4: Split Data
+set.seed(123) # for reproducibility
+train_index <- sample(1:nrow(data), 0.7 * nrow(data))
+train_data <- data[train_index, ]
+test_data <- data[-train_index, ]
+
+# Step 5: Model Building
+model <- glm(credit_risk ~ ., data = train_data, family = binomial)
+
+# Step 6: Model Evaluation
+summary(model)
+
+```
+   b.[4 points] explore the dataset, including summary of dataset, types of predictors, if there are categorical predictors, convert the predictors to factors. 
+```{r}
+# Load the Dataset
+url <- "http://archive.ics.uci.edu/ml/machine-learning-databases/statlog/german/german.data"
+data <- read.table(url, header = FALSE, sep = " ")
+colnames(data) <- c("existing_account", "duration", "credit_history", "purpose", "credit_amount",
+                    "savings_account", "employment_duration", "installment_rate", "personal_status_sex",
+                    "other_debtors", "present_residence", "property", "age", "other_installment_plans",
+                    "housing", "existing_credits", "job", "dependents", "telephone", "foreign_worker", "credit_risk")
+
+# Explore the Dataset
+str(data)
+summary(data)
+
+# Check types of predictors
+sapply(data, class)
+
+# Convert categorical predictors to factors
+categorical_predictors <- c("existing_account", "credit_history", "purpose", "savings_account", 
+                            "employment_duration", "personal_status_sex", "other_debtors", 
+                            "property", "other_installment_plans", "housing", "job", 
+                            "telephone", "foreign_worker", "credit_risk")
+
+data[categorical_predictors] <- lapply(data[categorical_predictors], factor)
+
+# Check the structure and types after conversion
+str(data)
+
+```
+
+    
+   
+   c.[2 points] Column V21 represents the target, 1 = Good, 2 = Bad, convert value the values to 0 and 1, respectively.
+```{r}
+# Convert values in column V21 to 0 and 1
+data$credit_risk <- ifelse(data$credit_risk == 1, 0, 1)
+
+# Confirm the conversion
+table(data$credit_risk)
+```
+   
+     
+   
+   d.[2 points]  split the dataset to taining and test dataset with 90% and 10% of the data points, respectively.
+```{r}
+set.seed(123)
+n_rows <- nrow(data)
+row_indices <- sample(1:n_rows, n_rows, replace = FALSE)
+n_train <- round(0.9 * n_rows)
+n_test <- n_rows - n_train
+train_data <- data[row_indices[1:n_train], ]
+test_data <- data[row_indices[(n_train + 1):n_rows], ]
+dim(train_data)
+dim(test_data)
+
+```
+   
+   
+   
+   e.[3 points] use the training dataset to get a logistic regression (logit) model on data where the response is either zero or one, use family=binomial in your glm function call.
+```{r}
+logit_model <- glm(credit_risk ~ ., data = train_data, family = binomial)
+summary(logit_model)
+```
+   
+  
+    
+  f.[4 points] use the model to make prediction on the the training dataset, and test dataset, give the confusion matrices and accuracy for each dataset.
+```{r}
+# Predictions on training dataset
+train_predictions <- predict(logit_model, newdata = train_data, type = "response")
+train_predictions <- ifelse(train_predictions > 0.5, 1, 0) # Convert probabilities to binary predictions
+
+# Confusion matrix and accuracy for training dataset
+train_confusion <- table(Actual = train_data$credit_risk, Predicted = train_predictions)
+train_accuracy <- sum(diag(train_confusion)) / sum(train_confusion)
+
+# Predictions on test dataset
+test_predictions <- predict(logit_model, newdata = test_data, type = "response")
+test_predictions <- ifelse(test_predictions > 0.5, 1, 0) # Convert probabilities to binary predictions
+
+# Confusion matrix and accuracy for test dataset
+test_confusion <- table(Actual = test_data$credit_risk, Predicted = test_predictions)
+test_accuracy <- sum(diag(test_confusion)) / sum(test_confusion)
+
+# Display confusion matrices and accuracy
+cat("Confusion Matrix for Training Dataset:\n")
+print(train_confusion)
+cat("\nAccuracy for Training Dataset:", train_accuracy, "\n")
+
+cat("\nConfusion Matrix for Test Dataset:\n")
+print(test_confusion)
+cat("\nAccuracy for Test Dataset:", test_accuracy, "\n")
+
+```
+(2). [4 points] Because the model gives a result between $0$ and $1$, it requires setting a threshold probability to separate between “good” and “bad” answers. In this data set, they estimate that incorrectly identifying a bad customer as good, is $5$ times worse than incorrectly classifying a good customer as bad. Determine a good threshold probability based on your model <span style='color:red'>(please demonstrate your reasoning.)</span>
+```{r}
+# Step 1: Predict probabilities
+probabilities <- predict(model, newdata = test_data, type = "response")
+
+# Step 2: Define the cost function
+calculate_cost <- function(threshold, probabilities, actual) {
+  predictions <- ifelse(probabilities > threshold, 1, 0)
+  fp <- sum((predictions == 1) & (actual == 0)) # Actual good, predicted bad
+  fn <- sum((predictions == 0) & (actual == 1)) # Actual bad, predicted good
+  cost <- 5 * fp + 1 * fn
+  return(cost)
+}
+
+# Step 3: Evaluate thresholds
+thresholds <- seq(0, 1, by = 0.01)
+costs <- sapply(thresholds, function(t) calculate_cost(t, probabilities, test_data$V21))
+
+# Step 4: Find the optimal threshold
+optimal_threshold <- thresholds[which.min(costs)]
+
+# Print the optimal threshold
+print(optimal_threshold)
+
+
+```
+
+# Question 5 [28 points]
+In this problem, you will develop a model to predict whether a given car gets high or low gas mileage based on the `Auto` data set.
+
+(1).[2 points] Create a binary variable, `mpg01`, that contains a $1$ if mpg contains a value above its median, and a $0$ if mpg contains a value below
+its median. You can compute the median using the `median()` function. Note you may find it helpful to use the data.frame() function to create a single data set containing both `mpg01` and
+the other `Auto` variables.
+
+    Answer: 
+```{r}
+library(MASS)
+library(caret)
+```
+ 
+```{r}
+library(ISLR2)
+# Load the DataSet
+data(Auto)
+head(Auto, 5)
+# Compute the median of mpg
+mpg_median <- median(Auto$mpg)
+# Create mpg01 variable
+Auto$mpg01 <- ifelse(Auto$mpg > mpg_median, 1, 0)
+# Check the structure of the updated dataset
+str(Auto)
+head(Auto, 5)
+
+```
+    
+    
+(2).[4 points] Explore the data graphically in order to investigate the association between `mpg01` and the other features. Which of the other
+features seem most likely to be useful in predicting `mpg01`? Scatterplots and boxplots may be useful tools to answer this question.
+Describe your findings.
+```{r}
+# Scatterplot
+# Assuming 'Auto' is your dataset and it includes 'mpg01'
+ggplot(Auto, aes(x = displacement, y = mpg01)) + 
+  geom_jitter(aes(color = factor(mpg01)), width = 0.1) +
+  labs(x = "Displacement", y = "MPG01 (Binary)", color = "MPG01") +
+  theme_minimal()
+ggplot(Auto, aes(x=factor(cylinders), y=mpg01)) + geom_boxplot() + xlab("Cylinders")
+```
+
+    
+    
+(3).[2 points] Split the data into a training set and a test set.
+```{r}
+# Load the library
+library(caret)
+# Set seed for reproductivity
+set.seed(123)
+# Create the training and set the indices
+train_index <- createDataPartition(Auto$mpg01, p = 0.8, list =  FALSE)
+# Create training and test sets
+train_set <- Auto[train_index, ]
+test_set <- Auto[-train_index, ]
+```
+(4).[3 points] Perform LDA on the training data in order to predict `mpg01` using the variables that seemed most associated with `mpg01` in (2). What is the test error of the model obtained?
+```{r}
+# Fit an LDA model on the training data
+lda_model <- lda(mpg01 ~ displacement + weight, data = train_set)
+
+# Predict on the test data using the fitted model
+lda_predictions <- predict(lda_model, newdata = test_set)
+
+# Create a confusion matrix to evaluate the model's performance
+conf_matrix <- table(Predicted = lda_predictions$class, Actual = test_set$mpg01)
+
+# Calculate the test error
+test_error <- mean(lda_predictions$class != test_set$mpg01)
+
+# Print out the test error
+print(test_error)
+
+# Print out the confusion matrix to examine the prediction details
+print(conf_matrix)
+```
+(5).[3 points] Perform QDA on the training data in order to predict `mpg01` using the variables that seemed most associated with `mpg01` in (2). What is the test error of the model obtained?
+```{r}
+# Fit QDA model on training data
+qda_fit <- qda(mpg01 ~ displacement + weight, data = train_set)
+
+# Predict on test data
+qda_pred <- predict(qda_fit, newdata = test_set)
+
+# Create a confusion matrix
+conf_matrix_qda <- table(Predicted = qda_pred$class, Actual = test_set$mpg01)
+
+# Calculate test error
+test_error_qda <- mean(qda_pred$class != test_set$mpg01)
+
+# Print out the test error for QDA
+cat("QDA Test Error:", test_error_qda, "\n")
+
+# Print out the confusion matrix for QDA
+print(conf_matrix_qda)
+```
+
+    
+(6). [3 points] Perform logistic regression on the training data in order to predict `mpg01` using the variables that seemed most associated with `mpg01` in (2). What is the test error of the model obtained?
+```{r}
+# Fit logistic regression model on training data
+logit_fit <- glm(mpg01 ~ displacement + weight, family = binomial, data = train_set)
+
+# Predict on test data
+logit_probs <- predict(logit_fit, newdata = test_set, type = "response")
+logit_pred <- as.numeric(logit_probs > 0.5)
+
+# Create a confusion matrix
+conf_matrix_logit <- table(Predicted = logit_pred, Actual = test_set$mpg01)
+
+# Calculate test error
+test_error_logit <- mean(logit_pred != test_set$mpg01)
+
+# Print out the test error and confusion matrix
+cat("Test Error:", test_error_logit, "\n")
+print(conf_matrix_logit)
+
+```
+
+    
+(7). [3 points] Perform naive Bayes on the training data in order to predict `mpg01` using the variables that seemed most associated with `mpg01` in (2). What is the test error of the model obtained?
+```{r}
+library(e1071)
+
+# Fit Naive Bayes model on training data
+nb_values <- naiveBayes(mpg01 ~ displacement + weight, data=train_set)
+
+# Predict on test data
+nb_pred <- predict(nb_values, test_set)
+
+# You could also calculate the test error as previously shown
+test_error <- mean(nb_pred != test_set$mpg01)
+
+# You could create a confusion matrix to see the details of the prediction
+conf_matrix <- table(Predicted = nb_pred, Actual = test_set$mpg01)
+
+print(test_error)
+print(conf_matrix)
+```
+
+    
+(8). [5 points] Perform KNN on the training data in order to predict `mpg01` using the variables that seemed most associated with `mpg01` in (2). What is the test error of the model obtained? Which value of K seems to perform the best on this data set?
+```{r}
+# Load the required packages
+library(class)
+library(caret)
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Prepare the predictors and responses
+train_predictors <- scale(train_set[, c("displacement", "weight")])
+test_predictors <- scale(test_set[, c("displacement", "weight")])
+train_response <- train_set$mpg01
+
+# Define the range of k values to try
+k_values <- 1:20
+errors <- numeric(length(k_values))
+
+# Perform k-fold cross-validation (e.g., 10-fold)
+folds <- createDataPartition(train_response, times = 10, p = 0.8, list = FALSE)
+
+# Loop over each k value
+for (k in k_values) {
+  fold_errors <- numeric(length(folds))
+  
+  # Perform cross-validation for each fold
+  for (i in seq_along(folds)) {
+    # Split the data
+    train_fold <- train_predictors[-folds[[i]], ]
+    test_fold <- train_predictors[folds[[i]], ]
+    train_fold_response <- train_response[-folds[[i]]]
+    test_fold_response <- train_response[folds[[i]]]
+    
+    # Train and predict with KNN
+    knn_pred <- knn(train = train_fold, test = test_fold, cl = train_fold_response, k = k)
+    
+    # Calculate error for the fold
+    fold_errors[i] <- mean(knn_pred != test_fold_response)
+  }
+  
+  # Calculate mean error across folds for the current k
+  errors[k] <- mean(fold_errors)
+}
+
+# Find the optimal k with the lowest error
+optimal_k <- which.min(errors)
+
+# Print the optimal k value
+print(paste("Optimal k:", optimal_k))
+
+# Plot the cross-validated errors for different k values
+plot(k_values, errors, type = "b", pch = 19, main = "KNN Cross-Validation",
+     xlab = "Number of Neighbors (k)", ylab = "Cross-Validated Error")
+
+# Run KNN with the optimal k on the test data
+knn_pred_optimal <- knn(train = train_predictors, test = test_predictors, cl = train_response, k = optimal_k)
+
+# Calculate the test error for the optimal k
+test_error_optimal_k <- mean(knn_pred_optimal != test_set$mpg01)
+
+# Output the test error for the optimal k
+print(paste("Test Error with Optimal k:", test_error_optimal_k))
+
+```
+
+
+(9).[3 points] Compare the above models, which models do you think is the best, why?
+
+Answer:
+Many factors are at play when comparing the various models, which include Naive Bayes, K-Nearest Neighbors (KNN), logistic regression, linear discriminant analysis (LDA), and quadratic discriminant analysis (QDA). At roughly 10.26\%, the QDA model exhibited the lowest test error, closely followed by the KNN model with \( k = 19 \) at 10.26\%. The test errors for the LDA and Naive Bayes models were 14.10\% and 12.82\%, respectively, for the logistic regression model and the LDA model.
+
+The following factors may influence the decision between QDA and KNN, as their test errors are identical:
+
+\textbf \item \begin{itemize}}{Compretability:} In general, LDA and logistic regression are easier to understand. One of them might be chosen if comprehending the connection between the predictors and response is crucial.
+ \item \textbf{Expense of Computation:} More processing power may be needed for QDA and KNN, particularly for KNN, which is particularly demanding on large datasets because it must calculate the distance between every query point and every training sample.
+  \item \textbf{Model Premises:} It's possible that the data is not normally distributed, as assumed by LDA and QDA. While a linear relationship between the log odds and the predictors is assumed by logistic regression, a normal distribution of the predictors is not. Naive Bayes makes the strong assumption—which might not hold true in practice—that the characteristics are conditionally independent given the class.
+  Taking these things into account, the QDA and KNN models make sense if we value accuracy and the capacity to identify intricate patterns in the data without requiring a high degree of interpretability. Between the two, QDA might be used if computational cost is an issue, especially for larger datasets, as it doesn't require the same computation for new predictions as KNN does.
+
+In conclusion, the optimal model is determined by the particulars of the issue at hand, the size of the dataset, the significance of interpretability, and the available processing power. Without any further background, the QDA and KNN models seem to provide the best test error performance for this dataset.
+
+
